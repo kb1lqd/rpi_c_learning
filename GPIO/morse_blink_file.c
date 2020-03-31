@@ -20,7 +20,7 @@ char input_string[255];
 char *input_wpm_raw;
 int input_wpm;
 
-
+int handle_chunk(char message[255], int message_len);
 
 int main(int argc, char *argv[])
 {
@@ -31,47 +31,22 @@ int main(int argc, char *argv[])
 	
 	//fp = fopen("message.txt", "r");
 	fp = fopen(argv[1], "r");
-	fgets(input_string, 255, (FILE*)fp); 
+	fgets(input_string, 255, fp); 
 	
 	
-	//Converter input message to all lowercase
-	//input_string = strlwr(input_string);
-	printf("%d\n",strlen(input_string));
-	for(i=0; i<strlen(input_string); i++)
-	{
-		input_string[i] = tolower(input_string[i]);
-	}
-
-
-
-	printf("Input arguments: %s, %s\n", argv[1], argv[2]);
+	printf("Inpuit arguments: %s, %s\n", argv[1], argv[2]);
 	printf("Morse Blink\n");
 	
-	//get user input values stored into global variables
-	//strcpy(input_string, argv[1]);
 	input_wpm_raw = argv[2];
 	input_wpm = atoi(input_wpm_raw);
 	
 	printf("Input String: %s\n", input_string);
 	printf("WPM: %d of dit length %f seconds \n", input_wpm, calc_tdit_ms(input_wpm));
-
-	//Check for GPIO initialization
-	if(!bcm2835_init())
-	{
-		printf("Failed to initialize.");
-		return 1;
-	}	
 	
-	//Set the pin to be an output
-	bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_OUTP);
-	bcm2835_gpio_write(PIN, LOW); // Set pin LOW
+	handle_chunk(input_string, strlen(input_string));
 	
-	//Check input string to blink LED in morse code at specific WPM rate		
-
-	for(i=0;i<strlen(input_string);i++)
-	{
-		blink_led(morse_char(input_string[i]), strlen(morse_char(input_string[i])), calc_tdit_ms(input_wpm)*1000);		
-	}
+	
+	
 
 	//Close GPIO library ports
 	bcm2835_close();
@@ -209,5 +184,44 @@ char* morse_char(char input_char)
 			return " ";		
 		default:
 			return "";
+	}
+}
+
+
+int handle_chunk(char message[255], int message_len)
+{
+	
+	//Setup
+	int i;
+	
+	printf("CHUNK: %s, %d\n", message, message_len);
+	
+	//Converter input message to all lowercase
+	//input_string = strlwr(input_string);
+	for(i=0; i<strlen(input_string); i++)
+	{
+		input_string[i] = tolower(input_string[i]);
+	}
+
+
+
+	
+
+	//Check for GPIO initialization
+	if(!bcm2835_init())
+	{
+		printf("Failed to initialize.");
+		return 1;
+	}	
+	
+	//Set the pin to be an output
+	bcm2835_gpio_fsel(PIN, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_write(PIN, LOW); // Set pin LOW
+	
+	//Check input string to blink LED in morse code at specific WPM rate		
+
+	for(i=0;i<strlen(input_string);i++)
+	{
+		blink_led(morse_char(input_string[i]), strlen(morse_char(input_string[i])), calc_tdit_ms(input_wpm)*1000);		
 	}
 }
